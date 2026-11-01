@@ -1,19 +1,5 @@
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-
-class HelloServiceImpl extends UnicastRemoteObject implements HelloService {
-    public HelloServiceImpl() throws RemoteException {
-        super();
-    }
-
-    @Override
-    public String sayHello() throws RemoteException {
-        System.out.println("[Server] Client vừa gọi phương thức sayHello()");
-        return "Hello, World!";
-    }
-}
 
 public class Server {
     public static final int PORT = 1099;

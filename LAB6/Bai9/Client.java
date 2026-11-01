@@ -1,45 +1,9 @@
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
-
-class AuctionCallbackImpl extends UnicastRemoteObject implements AuctionService.AuctionCallback {
-    private final String clientUsername;
-    private final NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN"));
-
-    public AuctionCallbackImpl(String clientUsername) throws RemoteException {
-        super();
-        this.clientUsername = clientUsername;
-    }
-
-    @Override
-    public void notifyNewBid(String productId, String productName, double newBid, String bidderName) throws RemoteException {
-        System.out.println();
-        System.out.println("=============================================================");
-        System.out.println("🔔 [THÔNG BÁO THỜI GIAN THỰC - GIÁ THẦU MỚI]");
-        System.out.printf("   Sản phẩm      : [%s] %s\n", productId, productName);
-        System.out.printf("   Giá thầu mới  : %s\n", currencyFormatter.format(newBid));
-        System.out.printf("   Người trả giá : %s %s\n", bidderName, bidderName.equals(clientUsername) ? "(Bạn)" : "");
-        System.out.println("=============================================================");
-        System.out.print("> Lựa chọn của bạn: ");
-    }
-
-    @Override
-    public void notifyNewProduct(AuctionService.Product product) throws RemoteException {
-        System.out.println();
-        System.out.println("=============================================================");
-        System.out.println("📢 [SẢN PHẨM MỚI LÊN SÀN ĐẤU GIÁ]");
-        System.out.printf("   Sản phẩm      : [%s] %s\n", product.getId(), product.getName());
-        System.out.printf("   Giá khởi điểm : %s\n", currencyFormatter.format(product.getInitialPrice()));
-        System.out.printf("   Người bán     : %s\n", product.getSeller());
-        System.out.println("=============================================================");
-        System.out.print("> Lựa chọn của bạn: ");
-    }
-}
 
 public class Client {
     public static final String HOST = "localhost";
@@ -47,7 +11,7 @@ public class Client {
     public static final String SERVICE_NAME = "AuctionService";
 
     // Giữ static reference để callback không bị JVM GC thu gom
-    private static AuctionService.AuctionCallback callback;
+    private static AuctionCallback callback;
 
     public static void main(String[] args) {
         try {
@@ -106,20 +70,20 @@ public class Client {
                                 System.out.println("Giá khởi điểm phải lớn hơn 0!");
                                 continue;
                             }
-                            AuctionService.Product newProd = service.addProduct(pName, pPrice, sellerName);
+                            Product newProd = service.addProduct(pName, pPrice, sellerName);
                             System.out.println(">>> ĐĂNG BÁN THÀNH CÔNG: " + newProd.getName() + " (Mã: " + newProd.getId() + ")");
                         } catch (NumberFormatException e) {
                             System.out.println("Giá không hợp lệ!");
                         }
                     } else if (ch.equals("2")) {
-                        List<AuctionService.Product> list = service.getProducts();
+                        List<Product> list = service.getProducts();
                         System.out.println("\n--- TẤT CẢ SẢN PHẨM TRÊN SÀN (" + list.size() + ") ---");
-                        for (AuctionService.Product p : list) System.out.println(p.getFormattedInfo());
+                        for (Product p : list) System.out.println(p.getFormattedInfo());
                     } else if (ch.equals("3")) {
-                        List<AuctionService.Product> list = service.getProducts();
+                        List<Product> list = service.getProducts();
                         System.out.println("\n--- SẢN PHẨM CỦA BẠN [" + sellerName + "] ---");
                         int count = 0;
-                        for (AuctionService.Product p : list) {
+                        for (Product p : list) {
                             if (p.getSeller().equalsIgnoreCase(sellerName)) {
                                 System.out.println(p.getFormattedInfo());
                                 count++;
@@ -153,15 +117,15 @@ public class Client {
                     String ch = scanner.nextLine().trim();
 
                     if (ch.equals("1")) {
-                        List<AuctionService.Product> prods = service.getProducts();
+                        List<Product> prods = service.getProducts();
                         System.out.println("\n--- DANH SÁCH SẢN PHẨM ĐANG ĐẤU GIÁ (" + prods.size() + ") ---");
-                        for (AuctionService.Product p : prods) System.out.println(p.getFormattedInfo());
+                        for (Product p : prods) System.out.println(p.getFormattedInfo());
                     } else if (ch.equals("2")) {
                         System.out.print("Nhập mã sản phẩm muốn đấu giá (VD: SP101): ");
                         if (!scanner.hasNextLine()) break;
                         String pId = scanner.nextLine().trim().toUpperCase();
 
-                        AuctionService.Product target = service.getProduct(pId);
+                        Product target = service.getProduct(pId);
                         if (target == null) {
                             System.out.println(">>> Không tìm thấy mã sản phẩm: " + pId);
                             continue;
